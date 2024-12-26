@@ -1,79 +1,146 @@
 // game.c
 #include "game.h"
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 void init_game(Game *game) {
-    for(int i = 0; i < ROWS; i++)
-        for(int j = 0; j < COLS; j++)
-            game->board[i][j] = ' ';
-    game->current_player = 1;
+    for(int i = 0; i < ROWS; i++) {
+        for(int j = 0; j < COLUMNS; j++) {
+            game->board[i][j] = EMPTY;
+        }
+    }
+    game->status = ONGOING;
 }
 
-void print_board(Game *game) {
-    printf("\n");
+// Ставим фишку player (USER или SERVER) в указанный столбец column
+int drop_piece(Game *game, int column, Cell player) {
+    if(column < 0 || column >= COLUMNS)
+        return -1;
+    for(int i = ROWS - 1; i >= 0; i--) {
+        if(game->board[i][column] == EMPTY) {
+            game->board[i][column] = player;
+            return i; 
+        }
+    }
+    return -1; // столбец заполнен
+}
+
+// Проверка победителя
+GameStatus check_winner(Game *game) {
+    // Горизонтали
     for(int i = 0; i < ROWS; i++) {
-        printf("|");
-        for(int j = 0; j < COLS; j++) {
-            printf(" %c |", game->board[i][j]);
+        for(int j = 0; j <= COLUMNS - 4; j++) {
+            Cell c = game->board[i][j];
+            if(c != EMPTY &&
+               c == game->board[i][j+1] &&
+               c == game->board[i][j+2] &&
+               c == game->board[i][j+3]) {
+                return (c == USER) ? WIN_USER : WIN_SERVER;
+            }
+        }
+    }
+
+    // Вертикали
+    for(int i = 0; i <= ROWS - 4; i++) {
+        for(int j = 0; j < COLUMNS; j++) {
+            Cell c = game->board[i][j];
+            if(c != EMPTY &&
+               c == game->board[i+1][j] &&
+               c == game->board[i+2][j] &&
+               c == game->board[i+3][j]) {
+                return (c == USER) ? WIN_USER : WIN_SERVER;
+            }
+        }
+    }
+
+    // Диагонали (слева-направо)
+    for(int i = 0; i <= ROWS - 4; i++) {
+        for(int j = 0; j <= COLUMNS - 4; j++) {
+            Cell c = game->board[i][j];
+            if(c != EMPTY &&
+               c == game->board[i+1][j+1] &&
+               c == game->board[i+2][j+2] &&
+               c == game->board[i+3][j+3]) {
+                return (c == USER) ? WIN_USER : WIN_SERVER;
+            }
+        }
+    }
+
+    // Диагонали (справа-налево)
+    for(int i = 0; i <= ROWS - 4; i++) {
+        for(int j = 3; j < COLUMNS; j++) {
+            Cell c = game->board[i][j];
+            if(c != EMPTY &&
+               c == game->board[i+1][j-1] &&
+               c == game->board[i+2][j-2] &&
+               c == game->board[i+3][j-3]) {
+                return (c == USER) ? WIN_USER : WIN_SERVER;
+            }
+        }
+    }
+
+    // Ничья?
+    int filled = 1;
+    for(int i = 0; i < ROWS; i++) {
+        for(int j = 0; j < COLUMNS; j++) {
+            if(game->board[i][j] == EMPTY) {
+                filled = 0;
+                break;
+            }
+        }
+        if(!filled) break;
+    }
+    if(filled)
+        return DRAW;
+
+    return ONGOING;
+}
+
+// Преобразование поля в JSON-массив
+void board_to_json(Game *game, char *json, size_t max_length) {
+    snprintf(json, max_length, "[");
+    for(int i = 0; i < ROWS; i++) {
+        strncat(json, "[", max_length - strlen(json) - 1);
+        for(int j = 0; j < COLUMNS; j++) {
+            if(game->board[i][j] == EMPTY) {
+                strncat(json, "\" \"", max_length - strlen(json) - 1);
+            }
+            else if(game->board[i][j] == USER) {
+                strncat(json, "\"X\"", max_length - strlen(json) - 1);
+            }
+            else {
+                strncat(json, "\"O\"", max_length - strlen(json) - 1);
+            }
+            if(j < COLUMNS - 1) {
+                strncat(json, ", ", max_length - strlen(json) - 1);
+            }
+        }
+        strncat(json, "]", max_length - strlen(json) - 1);
+        if(i < ROWS - 1) {
+            strncat(json, ", ", max_length - strlen(json) - 1);
+        }
+    }
+    strncat(json, "]", max_length - strlen(json) - 1);
+}
+
+void print_game_state(Game *game) {
+    for(int i = 0; i < ROWS; i++) {
+        for(int j = 0; j < COLUMNS; j++) {
+            char c;
+            if(game->board[i][j] == EMPTY)       c = '.';
+            else if(game->board[i][j] == USER)   c = 'X';
+            else                                 c = 'O';
+            printf("%c ", c);
         }
         printf("\n");
     }
-    printf("-----------------------------\n");
-    printf("  ");
-    for(int j = 0; j < COLS; j++) {
-        printf(" %d  ", j+1);
+    printf("Status: ");
+    switch(game->status) {
+        case ONGOING:    printf("Ongoing\n"); break;
+        case WIN_USER:   printf("User Wins\n"); break;
+        case WIN_SERVER: printf("Server Wins\n"); break;
+        case DRAW:       printf("Draw\n");      break;
     }
-    printf("\n\n");
-}
-
-int make_move(Game *game, int col) {
-    if(col < 0 || col >= COLS) return 0;
-    for(int i = ROWS-1; i >=0; i--) {
-        if(game->board[i][col] == ' ') {
-            game->board[i][col] = (game->current_player == 1) ? 'X' : 'O';
-            game->current_player = (game->current_player == 1) ? 2 : 1;
-            return 1;
-        }
-    }
-    return 0; // Столбец заполнен или неверный
-}
-
-int check_winner(Game *game) {
-    // Проверка горизонталей
-    for(int i = 0; i < ROWS; i++)
-        for(int j = 0; j < COLS-3; j++)
-            if(game->board[i][j] != ' ' &&
-               game->board[i][j] == game->board[i][j+1] &&
-               game->board[i][j] == game->board[i][j+2] &&
-               game->board[i][j] == game->board[i][j+3])
-                return (game->board[i][j] == 'X') ? 1 : 2;
-
-    // Проверка вертикалей
-    for(int i = 0; i < ROWS-3; i++)
-        for(int j = 0; j < COLS; j++)
-            if(game->board[i][j] != ' ' &&
-               game->board[i][j] == game->board[i+1][j] &&
-               game->board[i][j] == game->board[i+2][j] &&
-               game->board[i][j] == game->board[i+3][j])
-                return (game->board[i][j] == 'X') ? 1 : 2;
-
-    // Проверка диагоналей (слева направо)
-    for(int i = 0; i < ROWS-3; i++)
-        for(int j = 0; j < COLS-3; j++)
-            if(game->board[i][j] != ' ' &&
-               game->board[i][j] == game->board[i+1][j+1] &&
-               game->board[i][j] == game->board[i+2][j+2] &&
-               game->board[i][j] == game->board[i+3][j+3])
-                return (game->board[i][j] == 'X') ? 1 : 2;
-
-    // Проверка диагоналей (справа налево)
-    for(int i = 0; i < ROWS-3; i++)
-        for(int j = 3; j < COLS; j++)
-            if(game->board[i][j] != ' ' &&
-               game->board[i][j] == game->board[i+1][j-1] &&
-               game->board[i][j] == game->board[i+2][j-2] &&
-               game->board[i][j] == game->board[i+3][j-3])
-                return (game->board[i][j] == 'X') ? 1 : 2;
-
-    return 0; // Нет победителя
+    printf("\n");
 }

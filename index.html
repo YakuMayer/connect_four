@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>4 в ряд</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <h1>Игра "4 в ряд"</h1>
+    <div id="session-container">
+        <div id="create-session">
+            <button id="create-session-button">Создать Сессию</button>
+            <p id="my-session-id"></p>
+        </div>
+        <div id="join-session">
+            <input type="text" id="join-session-id" placeholder="Введите ID сессии">
+            <button id="join-session-button">Присоединиться</button>
+            <p id="join-status"></p>
+        </div>
+    </div>
+    <div id="game-container" style="display: none;">
+        <div id="status">Загрузка...</div>
+        <div id="game-board">
+            <!-- Игровое поле будет создано с помощью JavaScript -->
+        </div>
+        <button id="new-game" style="display: none;">Новая Игра</button>
+    </div>
+    <script src="/script.js"></script>
+</body>
+</html>

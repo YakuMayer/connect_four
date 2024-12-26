@@ -1,0 +1,126 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    background-color: #f0f8ff;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    background-color: #4682b4;
+    color: white;
+    padding: 20px 0;
+    margin: 0;
+}
+
+#session-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    gap: 50px;
+}
+
+#session-container div {
+    background-color: #e6f2ff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#join-session input {
+    padding: 10px;
+    width: 200px;
+    border: 1px solid #a0c4ff;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #4682b4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #315f7c;
+}
+
+#my-session-id, #join-status {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+#game-container {
+    margin: 20px auto;
+    width: 420px;
+}
+
+#status {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+#game-board {
+    display: grid;
+    grid-template-rows: repeat(6, 60px);
+    grid-template-columns: repeat(7, 60px);
+    gap: 5px;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.cell {
+    width: 60px;
+    height: 60px;
+    background-color: #00aaff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cell.empty:hover {
+    background-color: #0088cc;
+}
+
+.piece.user {
+    background-color: red;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    animation: drop 0.3s ease-in;
+}
+
+.piece.server {
+    background-color: yellow;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    animation: drop 0.3s ease-in;
+}
+
+@keyframes drop {
+    from {
+        transform: translateY(-100px);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+button#new-game {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin-top: 20px;
+    cursor: pointer;
+    background-color: #32cd32;
+}
+
+button#new-game:hover {
+    background-color: #228b22;
+}
